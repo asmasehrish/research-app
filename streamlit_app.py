@@ -350,7 +350,6 @@ elif page == "🔬 Research Gap":
         """)
 
 # ========== 7. ANALYTICS DASHBOARD ==========
-# ========== ANALYTICS DASHBOARD ==========
 elif page == "📊 Analytics Dashboard":
     st.markdown('<h1 class="main-header">📊 Research Analytics Dashboard</h1>', unsafe_allow_html=True)
     
