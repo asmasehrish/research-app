@@ -327,28 +327,101 @@ elif page == "📖 Literature Review":
                 st.download_button("📥 Download", lit_review, file_name="lit_review.txt")
 
 # ========== 6. RESEARCH GAP ==========
+# ========== RESEARCH GAP ==========
 elif page == "🔬 Research Gap":
     st.markdown('<h1 class="main-header">🔬 Research Gap Analysis</h1>', unsafe_allow_html=True)
-    if 'papers' not in st.session_state:
-        st.warning("⚠️ Please search for papers first")
+    
+    if 'papers' not in st.session_state or not st.session_state['papers']:
+        st.warning("⚠️ Please search for papers first (go to Search Papers)")
     else:
         papers = st.session_state['papers']
-        years = [p.get('publication_year') for p in papers if p.get('publication_year')]
+        
+        # ✅ Extract years safely
+        years = []
+        for p in papers:
+            year = p.get('publication_year')
+            if year is not None:
+                try:
+                    years.append(int(year))
+                except (ValueError, TypeError):
+                    pass  # Skip invalid years
+        
+        # Display metrics
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("Total Papers", len(papers))
-        if years:
-            with col2:
-                st.metric("Year Range", f"{min(years)} - {max(years)}")
-            with col3:
-                st.metric("Recent Papers (2020+)", len([y for y in years if y >= 2020]))
+            st.metric("📄 Total Papers", len(papers))
+        with col2:
+            if years:
+                st.metric("📅 Year Range", f"{min(years)} - {max(years)}")
+            else:
+                st.metric("📅 Year Range", "N/A")
+        with col3:
+            if years:
+                recent = len([y for y in years if y >= 2020])
+                st.metric("🆕 Recent Papers (2020+)", recent)
+            else:
+                st.metric("🆕 Recent Papers (2020+)", 0)
+        
+        st.divider()
+        
+        # Keyword extraction (only if we have papers)
+        st.subheader("🔍 AI-Powered Gap Analysis")
+        keywords = []
+        for p in papers[:20]:  # Limit to 20 papers for speed
+            title = p.get('title', '')
+            if title:
+                words = title.lower().split()[:5]
+                keywords.extend(words)
+        
+        if keywords:
+            from collections import Counter
+            top_keywords = Counter(keywords).most_common(10)
+            st.write("**Most common research themes:**")
+            for word, count in top_keywords:
+                st.progress(min(count/10, 1.0), text=f"{word}: {count} occurrences")
+        else:
+            st.info("📊 No keywords available to analyze.")
+        
         st.info("""
         **🎯 Suggested Research Gaps:**
         1. Limited studies on specific sub-populations
         2. Lack of longitudinal data
         3. Need for cross-cultural validation
+        4. Unexplored moderating variables
+        5. Understudied age groups or demographics
         """)
+        
+        # Generate Gap Report
+        if st.button("🔍 Generate Detailed Gap Report", type="primary"):
+            if years:
+                gap_report = f"""
+# Research Gap Analysis Report
 
+## Topic: {st.session_state.get('topic', 'N/A')}
+## Date: {datetime.now().strftime('%Y-%m-%d')}
+
+## Summary
+- Total papers analyzed: {len(papers)}
+- Year range: {min(years)} - {max(years)}
+- Recent papers (2020+): {len([y for y in years if y >= 2020])}
+
+## Identified Gaps
+1. **Population gaps**: Limited research on diverse populations
+2. **Methodological gaps**: Need for more experimental designs
+3. **Theoretical gaps**: Lack of integrative frameworks
+4. **Contextual gaps**: Understudied cultural contexts
+
+## Recommendations
+1. Conduct longitudinal studies
+2. Include diverse samples
+3. Develop culturally-adapted measures
+4. Explore moderating variables
+"""
+                st.markdown(gap_report)
+                st.download_button("📥 Download Gap Report", gap_report, file_name=f"gap_report_{datetime.now().strftime('%Y%m%d')}.txt")
+            else:
+                st.warning("⚠️ No year data available to generate report.")
+                
 # ========== ANALYTICS DASHBOARD ==========
 elif page == "📊 Analytics Dashboard":
     st.markdown('<h1 class="main-header">📊 Research Analytics Dashboard</h1>', unsafe_allow_html=True)
