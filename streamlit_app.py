@@ -349,7 +349,7 @@ elif page == "🔬 Research Gap":
         3. Need for cross-cultural validation
         """)
 
-# ========== 7. ANALYTICS DASHBOARD ==========
+# ========== ANALYTICS DASHBOARD ==========
 elif page == "📊 Analytics Dashboard":
     st.markdown('<h1 class="main-header">📊 Research Analytics Dashboard</h1>', unsafe_allow_html=True)
     
@@ -358,16 +358,17 @@ elif page == "📊 Analytics Dashboard":
     else:
         papers = st.session_state['papers']
         
-        # ✅ FIX: Only try to use years if it exists
+        # --- Safely extract years ---
         years = []
         for p in papers:
             year = p.get('publication_year')
-            if year:
+            if year is not None:
                 try:
                     years.append(int(year))
-                except:
-                    pass  # Skip if year is not a number
+                except (ValueError, TypeError):
+                    pass  # Skip invalid year formats
         
+        # --- Display metrics with fallbacks ---
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("📄 Total Papers", len(papers))
@@ -378,23 +379,26 @@ elif page == "📊 Analytics Dashboard":
                 st.metric("📅 Year Range", "N/A")
         with col3:
             if years:
-                recent = len([y for y in years if y >= 2020])
-                st.metric("🆕 Recent Papers (2020+)", recent)
+                recent_count = sum(1 for y in years if y >= 2020)
+                st.metric("🆕 Recent Papers (2020+)", recent_count)
             else:
                 st.metric("🆕 Recent Papers (2020+)", 0)
         
         st.divider()
         
-        # Year distribution chart (only if we have years)
+        # --- Year distribution chart ---
         if years:
             st.subheader("📅 Publication Trends by Year")
             year_counts = Counter(years)
-            year_data = dict(sorted(year_counts.items()))
-            st.bar_chart(year_data)
+            if year_counts:
+                year_data = dict(sorted(year_counts.items()))
+                st.bar_chart(year_data)
+            else:
+                st.info("📊 No year data available to display trends.")
         else:
             st.info("📊 No year data available to display trends.")
         
-        # Top journals
+        # --- Top journals ---
         st.subheader("📚 Top Journals")
         journals = []
         for p in papers:
@@ -404,8 +408,11 @@ elif page == "📊 Analytics Dashboard":
         
         if journals:
             journal_counts = Counter(journals).most_common(5)
-            for journal, count in journal_counts:
-                st.progress(min(count/10, 1.0), text=f"{journal}: {count} papers")
+            if journal_counts:
+                for journal, count in journal_counts:
+                    st.progress(min(count/10, 1.0), text=f"{journal}: {count} papers")
+            else:
+                st.info("📊 No journal data available.")
         else:
             st.info("📊 No journal data available.")
 
