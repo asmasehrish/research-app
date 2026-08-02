@@ -350,26 +350,65 @@ elif page == "🔬 Research Gap":
         """)
 
 # ========== 7. ANALYTICS DASHBOARD ==========
+# ========== ANALYTICS DASHBOARD ==========
 elif page == "📊 Analytics Dashboard":
     st.markdown('<h1 class="main-header">📊 Research Analytics Dashboard</h1>', unsafe_allow_html=True)
+    
     if 'papers' not in st.session_state or not st.session_state['papers']:
-        st.warning("⚠️ No papers found.")
+        st.warning("⚠️ No papers found. Please search for papers first (Search Papers)")
     else:
         papers = st.session_state['papers']
-        years = [p.get('publication_year') for p in papers if p.get('publication_year')]
+        
+        # ✅ FIX: Only try to use years if it exists
+        years = []
+        for p in papers:
+            year = p.get('publication_year')
+            if year:
+                try:
+                    years.append(int(year))
+                except:
+                    pass  # Skip if year is not a number
+        
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("📄 Total Papers", len(papers))
         with col2:
             if years:
                 st.metric("📅 Year Range", f"{min(years)} - {max(years)}")
+            else:
+                st.metric("📅 Year Range", "N/A")
         with col3:
             if years:
-                st.metric("🆕 Recent Papers (2020+)", len([y for y in years if y >= 2020]))
+                recent = len([y for y in years if y >= 2020])
+                st.metric("🆕 Recent Papers (2020+)", recent)
+            else:
+                st.metric("🆕 Recent Papers (2020+)", 0)
+        
+        st.divider()
+        
+        # Year distribution chart (only if we have years)
         if years:
             st.subheader("📅 Publication Trends by Year")
             year_counts = Counter(years)
-            st.bar_chart(dict(sorted(year_counts.items())))
+            year_data = dict(sorted(year_counts.items()))
+            st.bar_chart(year_data)
+        else:
+            st.info("📊 No year data available to display trends.")
+        
+        # Top journals
+        st.subheader("📚 Top Journals")
+        journals = []
+        for p in papers:
+            journal = p.get('primary_location', {}).get('source', {}).get('display_name', 'Unknown')
+            if journal and journal != 'Unknown':
+                journals.append(journal)
+        
+        if journals:
+            journal_counts = Counter(journals).most_common(5)
+            for journal, count in journal_counts:
+                st.progress(min(count/10, 1.0), text=f"{journal}: {count} papers")
+        else:
+            st.info("📊 No journal data available.")
 
 # ========== 8. SMART SUMMARIZER ==========
 elif page == "📝 Smart Summarizer":
