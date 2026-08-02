@@ -47,6 +47,64 @@ with st.sidebar:
     st.title("📚 Research Master Pro")
     st.markdown("---")
     
+    # Dark Mode Toggle - ADD THIS SECTION
+    dark_mode = st.toggle("🌙 Dark Mode", value=False)
+    if dark_mode:
+        st.markdown("""
+        <style>
+        .stApp { background-color: #1e1e1e; color: #ffffff; }
+        .main-header { color: #4fc3f7; }
+        .sub-header { color: #b0bec5; }
+        .paper-card { 
+            background-color: #2d2d2d; 
+            color: #ffffff; 
+            border-left: 4px solid #4fc3f7;
+        }
+        .apa-citation {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border: 1px solid #4fc3f7;
+        }
+        .stTextInput > div > div > input {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+        .stSelectbox > div > div > select {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+        .stTextArea > div > div > textarea {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+        .stButton > button {
+            background-color: #4fc3f7;
+            color: #1e1e1e;
+        }
+        .stMetric > div {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+        .stInfo {
+            background-color: #1a237e;
+            color: #ffffff;
+        }
+        .stWarning {
+            background-color: #4a2c00;
+            color: #ffffff;
+        }
+        .stSuccess {
+            background-color: #1b3a1b;
+            color: #ffffff;
+        }
+        .stError {
+            background-color: #4a1a1a;
+            color: #ffffff;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+    
+    # Keep your existing navigation
     page = st.radio(
         "🚀 Navigate",
         [
@@ -73,10 +131,10 @@ with st.sidebar:
             "👩‍🔬 About"
         ]
     )
+    
     st.markdown("---")
     st.caption("👩‍🔬 **Asma Sehrish**")
-    st.caption("v3.0 | APA Member Edition | AI Writing Included")
-
+    st.caption("v3.0 | APA Member Edition")
 # ========== 1. SEARCH PAPERS ==========
 if page == "🔍 Search Papers":
     st.markdown('<h1 class="main-header">🔍 Search Academic Papers</h1>', unsafe_allow_html=True)
