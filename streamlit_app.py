@@ -213,7 +213,19 @@ if page == "🔍 Search Papers":
                 st.session_state['papers'] = all_papers
                 st.session_state['topic'] = topic
                 
-                for i, paper in enumerate(all_papers[:100]):
+                # Display papers with pagination (show 20 at a time)
+                papers_per_page = 20
+                total_pages = (len(all_papers) + papers_per_page - 1) // papers_per_page
+                
+                if total_pages > 1:
+                    page_num = st.selectbox(f"Page (1-{total_pages})", range(1, total_pages + 1))
+                    start_idx = (page_num - 1) * papers_per_page
+                    end_idx = min(start_idx + papers_per_page, len(all_papers))
+                    display_papers = all_papers[start_idx:end_idx]
+                else:
+                    display_papers = all_papers
+                
+                for i, paper in enumerate(display_papers, start=start_idx + 1 if total_pages > 1 else 1):
                     with st.container():
                         col1, col2 = st.columns([4, 1])
                         with col1:
@@ -222,14 +234,66 @@ if page == "🔍 Search Papers":
                             journal = paper.get('primary_location', {}).get('source', {}).get('display_name', 'Unknown')
                             st.markdown(f"""
                             <div class="paper-card">
-                                <strong>{i+1}. {title}</strong><br>
+                                <strong>{i}. {title}</strong><br>
                                 📅 {year} | 📄 {journal}
                             </div>
                             """, unsafe_allow_html=True)
                         with col2:
                             doi = paper.get('doi', '')
-                            if doi:
+                            if doi and doi != 'N/A':
                                 st.link_button("🔗 DOI", f"https://doi.org/{doi}")
+                
+                # ===== DOWNLOAD ALL PAPERS BUTTON =====
+                st.divider()
+                st.subheader("📥 Download Your Search Results")
+                
+                import pandas as pd
+                import io
+                
+                # Prepare data for download
+                download_data = []
+                for i, paper in enumerate(all_papers):
+                    download_data.append({
+                        "Paper #": i + 1,
+                        "Title": paper.get('title', 'No title'),
+                        "Year": paper.get('publication_year', 'N/A'),
+                        "Journal": paper.get('primary_location', {}).get('source', {}).get('display_name', 'Unknown'),
+                        "DOI": paper.get('doi', 'N/A')
+                    })
+                
+                df = pd.DataFrame(download_data)
+                csv_buffer = io.StringIO()
+                df.to_csv(csv_buffer, index=False)
+                csv_data = csv_buffer.getvalue()
+                
+                # Text version with APA-style references
+                text_data = ""
+                for i, paper in enumerate(all_papers):
+                    title = paper.get('title', 'No title')
+                    year = paper.get('publication_year', 'N/A')
+                    journal = paper.get('primary_location', {}).get('source', {}).get('display_name', 'Unknown')
+                    text_data += f"{i+1}. {title} ({year}). {journal}.\n"
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.download_button(
+                        label="📥 Download as CSV (Excel)",
+                        data=csv_data,
+                        file_name=f"papers_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+                with col2:
+                    st.download_button(
+                        label="📥 Download as Text (APA Style)",
+                        data=text_data,
+                        file_name=f"papers_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                        mime="text/plain",
+                        use_container_width=True
+                    )
+                
+                st.caption(f"📊 {len(all_papers)} papers ready for download")
+                
             else:
                 st.error("❌ No papers found. Try different keywords.")
 
