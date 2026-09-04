@@ -46,8 +46,8 @@ st.markdown("""
 with st.sidebar:
     st.title("📚 Research Master Pro")
     st.markdown("---")
-    
-    # Dark Mode Toggle - ADD THIS SECTION
+
+    # Dark Mode Toggle
     dark_mode = st.toggle("🌙 Dark Mode", value=False)
     if dark_mode:
         st.markdown("""
@@ -103,8 +103,8 @@ with st.sidebar:
         }
         </style>
         """, unsafe_allow_html=True)
-    
-    # Keep your existing navigation
+
+    # Navigation
     page = st.radio(
         "🚀 Navigate",
         [
@@ -131,29 +131,30 @@ with st.sidebar:
             "👩‍🔬 About"
         ]
     )
-    
+
     st.markdown("---")
     st.caption("👩‍🔬 **Asma Sehrish**")
     st.caption("v3.0 | APA Member Edition")
+
 # ========== 1. SEARCH PAPERS ==========
 if page == "🔍 Search Papers":
     st.markdown('<h1 class="main-header">🔍 Search Academic Papers</h1>', unsafe_allow_html=True)
-    
+
     col1, col2 = st.columns([3, 1])
     with col1:
         topic = st.text_input("Enter research topic:", placeholder="e.g., synaptic plasticity PTSD")
     with col2:
         num_papers = st.number_input("Number:", min_value=5, max_value=100, value=10)
         source = st.selectbox("Source:", ["OpenAlex", "PubMed", "Semantic Scholar"])
-    
+
     apa_only = st.checkbox("📚 Limit to APA Journals", value=False)
-    
+
     search_btn = st.button("🔎 Search", type="primary", use_container_width=True)
-    
+
     if search_btn and topic:
         with st.spinner(f"Searching for up to {num_papers} papers..."):
             all_papers = []
-            
+
             if source == "OpenAlex":
                 url = "https://api.openalex.org/works"
                 params = {
@@ -167,7 +168,7 @@ if page == "🔍 Search Papers":
                 response = requests.get(url, params=params)
                 if response.status_code == 200:
                     all_papers = response.json().get("results", [])
-            
+
             elif source == "PubMed":
                 url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
                 params = {
@@ -187,7 +188,7 @@ if page == "🔍 Search Papers":
                             "publication_year": "2024",
                             "primary_location": {"source": {"display_name": "PubMed"}}
                         })
-            
+
             elif source == "Semantic Scholar":
                 url = "https://api.semanticscholar.org/graph/v1/paper/search"
                 params = {
@@ -207,25 +208,34 @@ if page == "🔍 Search Papers":
                             },
                             "doi": paper.get("doi", "")
                         })
-            
+
             if all_papers:
                 st.success(f"✅ Found {len(all_papers)} papers")
                 st.session_state['papers'] = all_papers
                 st.session_state['topic'] = topic
-                
-                # Display papers with pagination (show 20 at a time)
+
+                # ===== DISPLAY ALL PAPERS WITH PAGINATION =====
                 papers_per_page = 20
                 total_pages = (len(all_papers) + papers_per_page - 1) // papers_per_page
                 
                 if total_pages > 1:
-                    page_num = st.selectbox(f"Page (1-{total_pages})", range(1, total_pages + 1))
+                    col_page, col_info = st.columns([1, 3])
+                    with col_page:
+                        page_num = st.selectbox("📄 Page", range(1, total_pages + 1))
+                    with col_info:
+                        st.caption(f"Showing page {page_num} of {total_pages} | Total: {len(all_papers)} papers")
+                    
                     start_idx = (page_num - 1) * papers_per_page
                     end_idx = min(start_idx + papers_per_page, len(all_papers))
                     display_papers = all_papers[start_idx:end_idx]
+                    st.caption(f"📊 Showing papers {start_idx + 1} - {end_idx} of {len(all_papers)}")
                 else:
                     display_papers = all_papers
-                
-                for i, paper in enumerate(display_papers, start=start_idx + 1 if total_pages > 1 else 1):
+                    start_idx = 0
+                    st.caption(f"📊 Showing all {len(all_papers)} papers")
+
+                # Display papers with correct numbering
+                for i, paper in enumerate(display_papers, start=start_idx + 1):
                     with st.container():
                         col1, col2 = st.columns([4, 1])
                         with col1:
@@ -242,15 +252,11 @@ if page == "🔍 Search Papers":
                             doi = paper.get('doi', '')
                             if doi and doi != 'N/A':
                                 st.link_button("🔗 DOI", f"https://doi.org/{doi}")
-                
+
                 # ===== DOWNLOAD ALL PAPERS BUTTON =====
                 st.divider()
                 st.subheader("📥 Download Your Search Results")
                 
-                import pandas as pd
-                import io
-                
-                # Prepare data for download
                 download_data = []
                 for i, paper in enumerate(all_papers):
                     download_data.append({
@@ -266,7 +272,6 @@ if page == "🔍 Search Papers":
                 df.to_csv(csv_buffer, index=False)
                 csv_data = csv_buffer.getvalue()
                 
-                # Text version with APA-style references
                 text_data = ""
                 for i, paper in enumerate(all_papers):
                     title = paper.get('title', 'No title')
@@ -302,7 +307,7 @@ elif page == "📖 Psychology Databases":
     st.markdown('<h1 class="main-header">📖 Psychology Databases</h1>', unsafe_allow_html=True)
     st.info("🔍 **Search psychology papers directly using your APA member access or free databases!**")
     topic = st.text_input("Enter your research topic:", placeholder="e.g., cognitive behavioral therapy")
-    
+
     col1, col2 = st.columns(2)
     with col1:
         if st.button("📚 APA PsycNet", use_container_width=True):
@@ -391,16 +396,14 @@ elif page == "📖 Literature Review":
                 st.download_button("📥 Download", lit_review, file_name="lit_review.txt")
 
 # ========== 6. RESEARCH GAP ==========
-# ========== RESEARCH GAP ==========
 elif page == "🔬 Research Gap":
     st.markdown('<h1 class="main-header">🔬 Research Gap Analysis</h1>', unsafe_allow_html=True)
-    
+
     if 'papers' not in st.session_state or not st.session_state['papers']:
         st.warning("⚠️ Please search for papers first (go to Search Papers)")
     else:
         papers = st.session_state['papers']
-        
-        # ✅ Extract years safely
+
         years = []
         for p in papers:
             year = p.get('publication_year')
@@ -408,9 +411,8 @@ elif page == "🔬 Research Gap":
                 try:
                     years.append(int(year))
                 except (ValueError, TypeError):
-                    pass  # Skip invalid years
-        
-        # Display metrics
+                    pass
+
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("📄 Total Papers", len(papers))
@@ -425,27 +427,25 @@ elif page == "🔬 Research Gap":
                 st.metric("🆕 Recent Papers (2020+)", recent)
             else:
                 st.metric("🆕 Recent Papers (2020+)", 0)
-        
+
         st.divider()
-        
-        # Keyword extraction (only if we have papers)
+
         st.subheader("🔍 AI-Powered Gap Analysis")
         keywords = []
-        for p in papers[:20]:  # Limit to 20 papers for speed
+        for p in papers[:20]:
             title = p.get('title', '')
             if title:
                 words = title.lower().split()[:5]
                 keywords.extend(words)
-        
+
         if keywords:
-            from collections import Counter
             top_keywords = Counter(keywords).most_common(10)
             st.write("**Most common research themes:**")
             for word, count in top_keywords:
                 st.progress(min(count/10, 1.0), text=f"{word}: {count} occurrences")
         else:
             st.info("📊 No keywords available to analyze.")
-        
+
         st.info("""
         **🎯 Suggested Research Gaps:**
         1. Limited studies on specific sub-populations
@@ -454,8 +454,7 @@ elif page == "🔬 Research Gap":
         4. Unexplored moderating variables
         5. Understudied age groups or demographics
         """)
-        
-        # Generate Gap Report
+
         if st.button("🔍 Generate Detailed Gap Report", type="primary"):
             if years:
                 gap_report = f"""
@@ -485,17 +484,16 @@ elif page == "🔬 Research Gap":
                 st.download_button("📥 Download Gap Report", gap_report, file_name=f"gap_report_{datetime.now().strftime('%Y%m%d')}.txt")
             else:
                 st.warning("⚠️ No year data available to generate report.")
-                
-# ========== ANALYTICS DASHBOARD ==========
+
+# ========== 7. ANALYTICS DASHBOARD ==========
 elif page == "📊 Analytics Dashboard":
     st.markdown('<h1 class="main-header">📊 Research Analytics Dashboard</h1>', unsafe_allow_html=True)
-    
+
     if 'papers' not in st.session_state or not st.session_state['papers']:
         st.warning("⚠️ No papers found. Please search for papers first (Search Papers)")
     else:
         papers = st.session_state['papers']
-        
-        # --- Safely extract years ---
+
         years = []
         for p in papers:
             year = p.get('publication_year')
@@ -503,9 +501,8 @@ elif page == "📊 Analytics Dashboard":
                 try:
                     years.append(int(year))
                 except (ValueError, TypeError):
-                    pass  # Skip invalid year formats
-        
-        # --- Display metrics with fallbacks ---
+                    pass
+
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("📄 Total Papers", len(papers))
@@ -520,10 +517,9 @@ elif page == "📊 Analytics Dashboard":
                 st.metric("🆕 Recent Papers (2020+)", recent_count)
             else:
                 st.metric("🆕 Recent Papers (2020+)", 0)
-        
+
         st.divider()
-        
-        # --- Year distribution chart ---
+
         if years:
             st.subheader("📅 Publication Trends by Year")
             year_counts = Counter(years)
@@ -534,15 +530,14 @@ elif page == "📊 Analytics Dashboard":
                 st.info("📊 No year data available to display trends.")
         else:
             st.info("📊 No year data available to display trends.")
-        
-        # --- Top journals ---
+
         st.subheader("📚 Top Journals")
         journals = []
         for p in papers:
             journal = p.get('primary_location', {}).get('source', {}).get('display_name', 'Unknown')
             if journal and journal != 'Unknown':
                 journals.append(journal)
-        
+
         if journals:
             journal_counts = Counter(journals).most_common(5)
             if journal_counts:
@@ -627,9 +622,9 @@ elif page == "📖 APA Citations":
 # ========== 12. WRITE WITH GROQ ==========
 elif page == "📝 Write with Groq (FREE)":
     st.markdown('<h1 class="main-header">📝 Write Manuscript with Groq (FREE)</h1>', unsafe_allow_html=True)
-    
+
     st.info("🤖 **Groq writes your manuscript for FREE – API key loaded from Secrets!**")
-    
+
     try:
         api_key = st.secrets["GROQ_API_KEY"]
         st.success("✅ Groq API key loaded securely from Secrets!")
@@ -637,7 +632,7 @@ elif page == "📝 Write with Groq (FREE)":
         st.error("❌ GROQ_API_KEY not found in Secrets. Please add it.")
         st.info("💡 Go to: Your Space → Settings → Repository secrets")
         st.stop()
-    
+
     col1, col2 = st.columns(2)
     with col1:
         paper_title = st.text_input("📝 Paper Title:", placeholder="e.g., The Impact of Mindfulness on Anxiety")
@@ -645,9 +640,9 @@ elif page == "📝 Write with Groq (FREE)":
     with col2:
         word_count = st.selectbox("📊 Length:", ["500", "1000", "2000", "3000"])
         journal = st.text_input("📚 Target Journal:", placeholder="e.g., Journal of Clinical Psychology")
-    
+
     topic = st.text_input("🔬 Research Topic:", placeholder="e.g., cognitive behavioral therapy for anxiety")
-    
+
     if st.button("📝 Generate Manuscript", type="primary", use_container_width=True):
         if not topic:
             st.error("❌ Please enter a research topic")
@@ -656,7 +651,7 @@ elif page == "📝 Write with Groq (FREE)":
                 try:
                     from groq import Groq
                     client = Groq(api_key=api_key)
-                    
+
                     prompt = f"Write a complete academic manuscript.\n\n**Title:** {paper_title or topic}\n**Type:** {paper_type}\n**Topic:** {topic}\n**Target Journal:** {journal or 'General Psychology'}\n\n"
                     prompt += """
 Write a complete manuscript with these sections:
@@ -685,14 +680,14 @@ Write a complete manuscript with these sections:
 # ========== 13. RESEARCH STEPS (9 STEPS) ==========
 elif page == "📋 Research Steps (9 Steps)":
     st.markdown('<h1 class="main-header">📋 Complete Research Workflow – 9 Steps</h1>', unsafe_allow_html=True)
-    
+
     st.info("🧠 **Follow these 9 research steps to analyze your papers like a professional researcher!**")
-    
+
     if 'papers' not in st.session_state or not st.session_state['papers']:
         st.warning("⚠️ Please search for papers first (Search Papers)")
     else:
         st.success(f"✅ Found {len(st.session_state['papers'])} papers ready for analysis!")
-        
+
         step = st.selectbox("Select Research Step:", [
             "📋 Step 1: Paper Intake & Organization",
             "⚡ Step 2: Identify Contradictions",
@@ -704,7 +699,7 @@ elif page == "📋 Research Steps (9 Steps)":
             "🗺️ Step 8: Build Knowledge Map",
             "💡 Step 9: Summarize Impact (So What?)"
         ])
-        
+
         if st.button("▶️ Run This Step", type="primary", use_container_width=True):
             with st.spinner(f"Running {step}..."):
                 if step == "📋 Step 1: Paper Intake & Organization":
@@ -719,7 +714,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     df = pd.DataFrame(table_data)
                     st.dataframe(df, use_container_width=True)
                     st.success("✅ Step 1 Complete! Papers organized.")
-                
+
                 elif step == "⚡ Step 2: Identify Contradictions":
                     st.subheader("⚡ Contradiction Finder")
                     st.markdown("""
@@ -728,7 +723,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     | Treatment effectiveness | Significant (Paper 2) | Not significant (Paper 5) | Methodology |
                     """)
                     st.success("✅ Step 2 Complete! Contradictions identified.")
-                
+
                 elif step == "🔗 Step 3: Trace Citation History":
                     st.subheader("🔗 Citation Chain")
                     st.markdown("""
@@ -738,7 +733,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     - **Current Status:** Contested
                     """)
                     st.success("✅ Step 3 Complete! Citation chains traced.")
-                
+
                 elif step == "🔍 Step 4: Identify Research Gaps":
                     st.subheader("🔍 Research Gaps")
                     st.markdown("""
@@ -747,7 +742,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     - **Path to Resolution:** 5-year longitudinal study
                     """)
                     st.success("✅ Step 4 Complete! Research gaps identified.")
-                
+
                 elif step == "📊 Step 5: Audit Methodologies":
                     st.subheader("📊 Methodology Audit")
                     st.markdown("""
@@ -756,7 +751,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     | Paper 1 | Experiment | 120 | Small sample |
                     """)
                     st.success("✅ Step 5 Complete! Methodologies audited.")
-                
+
                 elif step == "📝 Step 6: Synthesize Literature":
                     st.subheader("📝 Literature Synthesis")
                     st.markdown("""
@@ -767,7 +762,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     Researchers disagree about the mechanism of action.
                     """)
                     st.success("✅ Step 6 Complete! Literature synthesized.")
-                
+
                 elif step == "💀 Step 7: Examine Assumptions":
                     st.subheader("💀 Assumptions")
                     st.markdown("""
@@ -776,7 +771,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     - **Consequence:** Most findings would need revision
                     """)
                     st.success("✅ Step 7 Complete! Assumptions examined.")
-                
+
                 elif step == "🗺️ Step 8: Build Knowledge Map":
                     st.subheader("🗺️ Knowledge Map")
                     st.markdown("""
@@ -787,7 +782,7 @@ elif page == "📋 Research Steps (9 Steps)":
                     1. Clinical Efficacy – Papers 1, 3, 5
                     """)
                     st.success("✅ Step 8 Complete! Knowledge map built.")
-                
+
                 elif step == "💡 Step 9: Summarize Impact (So What?)":
                     st.subheader("💡 So What?")
                     st.markdown("""
