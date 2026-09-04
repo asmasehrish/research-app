@@ -214,28 +214,13 @@ if page == "🔍 Search Papers":
                 st.session_state['papers'] = all_papers
                 st.session_state['topic'] = topic
 
-                # ===== DISPLAY ALL PAPERS WITH PAGINATION =====
-                papers_per_page = 20
-                total_pages = (len(all_papers) + papers_per_page - 1) // papers_per_page
-                
-                if total_pages > 1:
-                    col_page, col_info = st.columns([1, 3])
-                    with col_page:
-                        page_num = st.selectbox("📄 Page", range(1, total_pages + 1))
-                    with col_info:
-                        st.caption(f"Showing page {page_num} of {total_pages} | Total: {len(all_papers)} papers")
-                    
-                    start_idx = (page_num - 1) * papers_per_page
-                    end_idx = min(start_idx + papers_per_page, len(all_papers))
-                    display_papers = all_papers[start_idx:end_idx]
-                    st.caption(f"📊 Showing papers {start_idx + 1} - {end_idx} of {len(all_papers)}")
-                else:
-                    display_papers = all_papers
-                    start_idx = 0
-                    st.caption(f"📊 Showing all {len(all_papers)} papers")
+                # ===== DISPLAY ALL PAPERS (NO PAGINATION) =====
+                display_papers = all_papers
+                start_idx = 0
+                st.caption(f"📊 Showing all {len(all_papers)} papers")
 
                 # Display papers with correct numbering
-                for i, paper in enumerate(display_papers, start=start_idx + 1):
+                for i, paper in enumerate(display_papers, start=1):
                     with st.container():
                         col1, col2 = st.columns([4, 1])
                         with col1:
